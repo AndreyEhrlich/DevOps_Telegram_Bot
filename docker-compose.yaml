@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    image: 
+    image: 192.168.182.169:5000/db
     ports:
       - ${DB_PORT}:5432
     environment:
@@ -50,7 +50,7 @@ services:
   db_repl_image:
     env_file:
       - .env
-    image:
+    image: 192.168.182.169:5000/db_repl
     ports:
       - ${DB_REPL_PORT}:5432
     environment:
@@ -76,11 +76,16 @@ services:
       chmod 0700 /var/lib/postgresql/data
       pg_ctl start -D /var/lib/postgresql/data
       "
-    depends_on:
-      - db_image
-    image:
-    networks:
+    bot_image:
+     image: 192.168.182.169:5000/bot
+     networks:
       Tg_network:
+     environment:
+      TOKEN: $TOKEN
+      RM_HOST: $RM_HOST
+      RM_PORT: $RM_PORT
+      RM_USER: $RM_USER
+      RM_PASSWORD: $RM_PASSWORD
     env_file:
       - .env
     volumes:
