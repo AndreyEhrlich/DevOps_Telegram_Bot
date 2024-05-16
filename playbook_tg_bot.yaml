@@ -44,7 +44,7 @@
     - name: pg_hba conf
       blockinfile:
         path: "/etc/postgresql/{{ hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/main/pg_hba.conf"
-        block: | 
+        block: |
           host replication all {{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}/24 scram-sha-256
           host all all {{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}/32 trust
           host all all {{ hostvars[inventory_hostname]['DB_HOST'] }}/32 trust
