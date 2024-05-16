@@ -4,11 +4,12 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 7.0.0.0/24
+        - subnet: 9.0.0.0/24
 volumes:
   pgdata:
   pglog:
 services:
+
   db_image:
     networks:
       Tg_network:
@@ -16,17 +17,18 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    image: 192.168.182.169:5000/db
+    image: 192.168.254.140:5000/db 
     ports:
-      - ${DB_PORT}:5432
+      - "${DB_PORT}:5432"
     environment:
-      POSTGRES_USER: $DB_USER
-      POSTGRES_DB: $DB_DATABASE
-      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_REPLICATION_USER: ${DB_REPL_USER}
       POSTGRES_REPLICATION_PASSWORD: ${DB_REPL_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+
       - pglog:/var/log/postgresql
     command: |
       postgres
@@ -45,14 +47,15 @@ services:
       -c log_statement=all
       -c log_replication_commands=on
       -c log_min_messages=debug1
-      -c log_min_error_statement=debug1
+      -c log_min_error_statement=debug1 
       -c 'config_file=/var/lib/postgresql/data/postgresql.conf'
+
   db_repl_image:
     env_file:
       - .env
-    image: 192.168.182.169:5000/db_repl
+    image: 192.168.254.140:5000/db_repl
     ports:
-      - ${DB_REPL_PORT}:5432
+      - "${DB_REPL_PORT}:5432"
     environment:
       PGUSER: ${DB_REPL_USER}
       PGPASSWORD: ${DB_REPL_PASSWORD}
@@ -62,25 +65,27 @@ services:
         ipv4_address: ${DB_REPL_HOST}
     command: |
       bash -c "
-
       while ! pg_isready -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER}; do
+          echo 'Waiting for main database to be ready...'
           sleep 1
       done
       echo 'Main database is ready.'
       export PGPASSWORD=$DB_REPL_PASSWORD
       pg_ctl stop -D /var/lib/postgresql/data -m fast
       until pg_basebackup -h ${DB_HOST} -U $DB_REPL_USER -D /var/lib/postgresql/data --wal-method=stream -v -P --write-recovery-conf; do
-        sleep 1
+        echo 'Waiting for the main server to connect...'
+        sleep 1s
       done
-      echo 'Starting replication...'
+      echo 'Backup completed, starting replication...'
       chmod 0700 /var/lib/postgresql/data
       pg_ctl start -D /var/lib/postgresql/data
       "
-    bot_image:
-     image: 192.168.182.169:5000/bot
-     networks:
+
+  bot_image:
+    image: 192.168.254.140:5000/bot
+    networks:
       Tg_network:
-     environment:
+    environment:
       TOKEN: $TOKEN
       RM_HOST: $RM_HOST
       RM_PORT: $RM_PORT
