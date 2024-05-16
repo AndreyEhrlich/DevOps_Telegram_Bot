@@ -16,9 +16,7 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    build:
-      context: ./db
-      dockerfile: Dockerfile
+    image: 
     ports:
       - ${DB_PORT}:5432
     environment:
@@ -29,7 +27,6 @@ services:
       POSTGRES_REPLICATION_PASSWORD: ${DB_REPL_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/init.sh:/docker-entrypoint-initdb.d/init.sh
       - pglog:/var/log/postgresql
     command: |
       postgres
@@ -53,9 +50,7 @@ services:
   db_repl_image:
     env_file:
       - .env
-    build:
-      context: ./db_repl
-      dockerfile: Dockerfile
+    image:
     ports:
       - ${DB_REPL_PORT}:5432
     environment:
@@ -83,10 +78,7 @@ services:
       "
     depends_on:
       - db_image
-  bot_image:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
+    image:
     networks:
       Tg_network:
     env_file:
