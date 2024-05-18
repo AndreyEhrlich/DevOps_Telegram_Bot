@@ -396,12 +396,17 @@ def get_apt(update, context):
 def choose_option(update, context):
     option = update.message.text
     if option == 'Все пакеты':
-        command = 'dpkg -l | head -n 10'
+        # Предположим, что каждая строка имеет длину примерно 100 символов
+        num_lines = 80  # 40 строк на сообщение, для двух сообщений
+        command = f'dpkg -l | head -n {num_lines}'
         client.connect(hostname=RM_HOST, username=RM_USER, password=RM_PASSWORD, port=RM_PORT)
         stdin, stdout, stderr = client.exec_command(command)
         data = stdout.read().decode('utf-8')
         client.close()
-        update.message.reply_text(data, reply_markup=ReplyKeyboardRemove())
+        if data:
+            BigMessage(update, data, max_length=4096)
+        else:
+            update.message.reply_text('Пакеты не найдены.', reply_markup=ReplyKeyboardRemove())
     elif option == 'Один пакет':
         update.message.reply_text('Введите название пакета:')
         return 'get_specific_package'
@@ -416,8 +421,12 @@ def get_specific_package(update, context):
     stdin, stdout, stderr = client.exec_command(command)
     data = stdout.read().decode('utf-8')
     client.close()
-    update.message.reply_text(data, reply_markup=ReplyKeyboardRemove())
+    if data:
+        BigMessage(update, data, max_length=4096)
+    else:
+        update.message.reply_text('Пакет не найден.', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
+
 
 def get_services(update: Update, context):
     client.connect(hostname=RM_HOST, username=RM_USER, password=RM_PASSWORD, port=RM_PORT)
