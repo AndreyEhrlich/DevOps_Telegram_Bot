@@ -433,28 +433,32 @@ def get_services(update: Update, context):
 def get_repl_logs(update: Update, context):
     log_dir = Path('/app/logs')
     log_file_path = log_dir / 'postgresql.log'
+    max_lines_per_message = 40
+    num_messages = 2
+    lines_needed = max_lines_per_message * num_messages
 
     try:
         if log_file_path.exists():
-            res = ""
             with open(log_file_path, 'r', encoding='utf-8') as file:
-                
-                for line in file:
-                    lowerLine = line.casefold()
-                    if ('repl' in lowerLine) or ('репл' in lowerLine):
-                        res += line.rstrip() + "\n"
+                lines = file.readlines()  # Читаем все строки
+            # Фильтрация и обработка с конца файла
+            found_lines = [line.rstrip() for line in reversed(lines) if 'repl' in line.casefold() or 'репл' in line.casefold()]
 
-            if res:
-                BigMessage(update, res)
+            # Ограничение количества строк для двух сообщений
+            if len(found_lines) > lines_needed:
+                found_lines = found_lines[:lines_needed]
+
+            if found_lines:
+                # Строки организуются в порядке свежести и отправляются через BigMessage
+                full_message = "\n".join(reversed(found_lines))  # Обратный порядок для корректного вывода
+                BigMessage(update, full_message)
             else:
-                update.message.reply_text("No logs\nВведите /get_bot_commands - для справки")
-                logging.info("No logs\nВведите /get_bot_commands - для справки")
+                update.message.reply_text("Логи не найдены.\nВведите /get_bot_commands - для справки")
         else:
-            update.message.reply_text("File for log didn't find\nВведите /get_bot_commands - для справки")
-            logging.error("File for log didn't find\nВведите /get_bot_commands - для справки")
+            update.message.reply_text("Файл лога не найден.\nВведите /get_bot_commands - для справки")
     except Exception as e:
-        update.message.reply_text(f"Error log: {str(e)}")
-        logging.error(f"Error log: {str(e)}")
+        update.message.reply_text(f"Ошибка доступа к файлу лога: {str(e)}")
+        logging.error(f"Ошибка доступа к файлу лога: {str(e)}")
 
 #def get_email_data(update: Update, context):
     client.connect(hostname=RM_HOST, username=RM_USER, password=RM_PASSWORD, port=RM_PORT)
