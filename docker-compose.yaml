@@ -9,7 +9,6 @@ volumes:
   pgdata:
   pglog:
 services:
-
   db_image:
     networks:
       Tg_network:
