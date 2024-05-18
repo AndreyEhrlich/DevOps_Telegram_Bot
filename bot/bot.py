@@ -459,8 +459,12 @@ def get_repl_logs(update: Update, context):
 
             if found_lines:
                 # Строки организуются в порядке свежести и отправляются через BigMessage
-                full_message = "\n".join(reversed(found_lines))  # Обратный порядок для корректного вывода
+                full_message = "\n".join(found_lines[:max_lines_per_message])
                 BigMessage(update, full_message)
+
+                if len(found_lines) > max_lines_per_message:
+                    full_message = "\n".join(found_lines[max_lines_per_message:])
+                    BigMessage(update, full_message)
             else:
                 update.message.reply_text("Логи не найдены.\nВведите /get_bot_commands - для справки")
         else:
